@@ -1,9 +1,2 @@
-citgm
-express
-fastify
-opossum
-prom-client
-kube
-faas
-cloudevents
+npm_packages/
 citgm
