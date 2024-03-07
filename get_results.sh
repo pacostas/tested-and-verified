@@ -40,7 +40,7 @@ function main {
             ;;
 
         *)
-            util::print::error "unknown argument \"${1}\""
+            print::error "unknown argument \"${1}\""
             ;;
         esac
     done
