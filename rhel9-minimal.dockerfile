@@ -1,5 +1,5 @@
 ARG NODE_VERSION
-FROM registry.access.redhat.com/ubi8/nodejs-${NODE_VERSION}-minimal
+FROM registry.access.redhat.com/ubi9/nodejs-${NODE_VERSION}-minimal
 
 WORKDIR /app
 

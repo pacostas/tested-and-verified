@@ -14,13 +14,9 @@ EXPOSE 8080
 # Expose ports:
 # * 8080 - Unprivileged port used by nodejs application
 
-ENV NODEJS_VERSION=14 \
-    NPM_RUN=start \
-    NAME=nodejs \
-    NPM_CONFIG_PREFIX=$HOME/.npm-global
+ARG NODE_VERSION
 
-
-ENV NODEJS_VERSION=14 \
+ENV NODEJS_VERSION=$NODE_VERSION \
     NPM_RUN=start \
     NAME=nodejs \
     NPM_CONFIG_PREFIX=$HOME/.npm-global
@@ -85,13 +81,17 @@ USER 1001
 
 # Set the default CMD to print the usage of the language image
 # CMD $STI_SCRIPTS_PATH/usage
+WORKDIR /app
 
 COPY ./docker_scripts/* .
 
-
 ARG ENABLE_CITGM
-RUN ./install_citgm.sh "$ENABLE_CITGM"
+
+if [ "$ENABLE_CITGM" = "true" ]; then
+    npm i -g "https://github.com/pacostas/citgm.git#removed-undici"
+fi
 
 ARG NPM_MODULE
+
 RUN ./run_package_module.sh "$NPM_MODULE" "$ENABLE_CITGM" 
 
