@@ -38,7 +38,7 @@ on:
         default: "ubuntu-latest"
 jobs:
   core-plugins:
-    name: CITGM
+    name: Test with CITGM
     runs-on: ${{inputs.os}}
     permissions:
       contents: read

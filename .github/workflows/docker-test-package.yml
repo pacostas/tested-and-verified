@@ -1,0 +1,66 @@
+name: Test Package with Docker
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "Package to test"
+        required: true
+        type: string
+      node-version:
+        description: "Node version to test"
+        required: true
+        type: string
+      os:
+        description: "Operating System"
+        required: false
+        type: choice
+        options:
+          - "rhel8"
+          - "rhel9"
+          - "rhel7"
+          - "ubuntu20"
+          - "ubuntu22"
+      with-citgm:
+        description: "Test with citgm"
+        required: false
+        type: boolean
+        default: false
+
+  workflow_call:
+    inputs:
+      package:
+        description: "Package to test"
+        required: true
+        type: string
+      node-version:
+        description: "Node version to test"
+        required: true
+        type: string
+      os:
+        description: "Operating System"
+        required: true
+        type: string
+      with-citgm:
+        description: "Use citgm to tets it"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  core-plugins:
+    name: Test with docker
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run on ${{ inputs.os }} with ${{ inputs.node-version }} package ${{ inputs.package }}
+        run: |
+          docker build . -f ${{ inputs.os }}.dockerfile \
+              --build-arg NPM_MODULE=${{ inputs.package }} \
+              --build-arg NODE_VERSION=${{ inputs.node-version }} \
+              --build-arg ENABLE_CITGM=${{ inputs.with-citgm }}
