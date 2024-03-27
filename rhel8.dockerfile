@@ -10,5 +10,8 @@ RUN ./select_node_version.sh "$NODE_VERSION"
 ARG ENABLE_CITGM
 RUN ./install_citgm.sh "$ENABLE_CITGM"
 
-ARG NPM_MODULE
-RUN ./run_package_module.sh "$NPM_MODULE" "$ENABLE_CITGM"
+
+RUN git clone https://github.com/fastify/fastify.git && cd fastify  && npm i && npm run test
+
+# ARG NPM_MODULE
+# RUN ./run_package_module.sh "$NPM_MODULE" "$ENABLE_CITGM"
