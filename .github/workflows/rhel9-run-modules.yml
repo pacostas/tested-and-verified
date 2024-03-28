@@ -1,0 +1,63 @@
+name: Rhel9 module testing
+
+on:
+  workflow_dispatch:
+    inputs:
+      citgm:
+        description: "Run with citgm"
+        required: false
+        type: choice
+        default: "false"
+        options:
+          - "true"
+          - "false"
+      os:
+        description: "Operating System"
+        required: false
+        type: choice
+        default: "ubuntu-latest"
+        options:
+          - "ubuntu-latest"
+          - "windows-latest"
+          - "macos-latest"
+
+jobs:
+  preparation:
+    name: Preparation
+    runs-on: ${{inputs.os}}
+    outputs:
+      supported_node_versions: ${{ steps.get-supported-node-versions.outputs.supported_node_versions }}
+      supported_modules: ${{ steps.get-supported-modules.outputs.supported_modules }}
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: Get supported node versions
+        id: get-supported-node-versions
+        run: |
+          supported_node_versions="$(jq -c '.' ./supported_node_versions.json)"
+          printf "supported_node_versions=%s\n" "${supported_node_versions}" >> "$GITHUB_OUTPUT"
+
+      - name: Get supported modules
+        id: get-supported-modules
+        run: |
+          supported_modules="$(jq -c '[.[] | .name]' ./supported_modules.json)"
+          printf "supported_modules=%s\n" "${supported_modules}" >> "$GITHUB_OUTPUT"
+
+  test_modules_rhel9:
+    needs: preparation
+    name: Rhel9 test all modules
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ${{ fromJSON(needs.preparation.outputs.supported_node_versions) }}
+        module: ${{ fromJSON(needs.preparation.outputs.supported_modules) }}
+
+    steps:
+      - name: Run something
+        # run: docker build . -f rhel9.dockerfile \
+        #   --build-arg NPM_MODULE=${{ matrix.module }} \
+        #   --build-arg NODE_VERSION=${{ matrix.node-version }} \
+        #   --build-arg ENABLE_CITGM=${{ github.event.inputs.citgm }}
+
+        run: echo "${{ matrix.module }}"  echo "${{ matrix.node-version }}"

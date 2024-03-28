@@ -1,0 +1,23 @@
+[
+  {
+    "name": "express"
+  },
+  {
+    "name": "prom-client"
+  },
+  {
+    "name": "opossum"
+  },
+  {
+    "name": "kube-service-bindings"
+  },
+  {
+    "name": "faas-js-runtime"
+  },
+  {
+    "name": "cloudevents"
+  },
+  {
+    "name": "fastify"
+  }
+]

@@ -100,7 +100,7 @@ run_tests() {
     for os in $oss; do
         for node_version in $node_versions; do
             for package in $packages; do
-                docker build -t fedora . -f "${os}.dockerfile" --build-arg NPM_MODULE=$package --build-arg ENABLE_CITGM=$citgm --build-arg NODE_VERSION=$node_version
+                docker build . -f "${os}.dockerfile" --build-arg NPM_MODULE=$package --build-arg ENABLE_CITGM=$citgm --build-arg NODE_VERSION=$node_version
             done
         done
     done
