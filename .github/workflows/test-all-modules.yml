@@ -1,0 +1,88 @@
+name: Test all module for a specific os
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: "Operating System to test against"
+        required: true
+        type: choice
+        options:
+          - "rhel7"
+          - "rhel8"
+          - "rhel9"
+          - "ubuntu20"
+          - "ubuntu22"
+      # node_version:
+      #   description: "Specific node version"
+      #   required: false
+      #   type: choice
+      #   default: "all"
+      #   options:
+      #     - "all"
+      #     - "14"
+      #     - "16"
+      #     - "18"
+      #     - "20"
+      # node_module:
+      #   description: "node module to test"
+      #   required: false
+      #   type: string
+      #   default: ""
+      citgm:
+        description: "Run with citgm"
+        required: false
+        type: choice
+        default: "false"
+        options:
+          - "true"
+          - "false"
+
+jobs:
+  preparation:
+    name: Preparation
+    runs-on: ubuntu-latest
+    outputs:
+      supported_node_versions: ${{ steps.get-supported-node-versions.outputs.supported_node_versions }}
+      supported_modules: ${{ steps.get-supported-modules.outputs.supported_modules }}
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: Get supported modules
+        id: get-supported-modules
+        run: |
+          supported_modules="$(jq -c '[.[] | .name]' ./supported_modules.json)"
+          printf "supported_modules=%s\n" "${supported_modules}" >> "$GITHUB_OUTPUT"
+
+      - name: Get supported node versions for ${{inputs.os}}
+        id: get-supported-node-versions
+        run: |
+          supported_node_versions="$(jq -c '.' ./supported_node_versions.json)"
+          printf "supported_node_versions=%s\n" "${supported_node_versions}" >> "$GITHUB_OUTPUT"
+
+  test_all_modules:
+    needs: preparation
+    name: Test all modules
+    runs-on: ubuntu-latest
+    if: ${{ matrix.node-version != "16" }}
+    strategy:
+      matrix:
+        node-version: ${{ fromJSON(needs.preparation.outputs.supported_node_versions) }}
+        module: ${{ fromJSON(needs.preparation.outputs.supported_modules) }}
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: is node supported by module
+        id: module_support
+        run: echo "::set-output name=is_module_supported::true"
+
+      - name: Run something
+        if: ${{ steps.module_support.outputs.is_module_supported != 'true' }}
+        run: |
+          echo "****"
+          echo '${{ steps.module_support.outputs.is_module_supported }}'
+          echo "***"
+          echo 'docker build . -f ${{inputs.os}}.dockerfile --build-arg NODE_VERSION=${{ matrix.node-version }} --build-arg ENABLE_CITGM=${{ inputs.citgm }}'

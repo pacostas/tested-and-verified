@@ -1,23 +1,52 @@
-[
-  {
-    "name": "express"
+{
+  "express": {
+    "platforms": {
+      "skip": {
+        "rhel7": { "node_versions": [16, 18] }
+      }
+    }
   },
-  {
-    "name": "prom-client"
+  "prom-client": {
+    "platforms": {
+      "skip": {
+        "rhel7": { "node_versions": [16, 18] }
+      }
+    }
   },
-  {
-    "name": "opossum"
+  "opossum": {
+    "platforms": {
+      "skip": {
+        "rhel7": { "node_versions": [16, 18] }
+      }
+    }
   },
-  {
-    "name": "kube-service-bindings"
+  "kube-service-bindings": {
+    "platforms": {
+      "skip": {
+        "rhel7": { "node_versions": [16, 18] }
+      }
+    }
   },
-  {
-    "name": "faas-js-runtime"
+
+  "faas-js-runtime": {
+    "platforms": {
+      "skip": {
+        "rhel7": { "node_versions": [16, 18] }
+      }
+    }
   },
-  {
-    "name": "cloudevents"
+  "cloudevents": {
+    "platforms": {
+      "skip": {
+        "rhel7": { "node_versions": [16, 18] }
+      }
+    }
   },
-  {
-    "name": "fastify"
+  "fastify": {
+    "platforms": {
+      "skip": {
+        "rhel7": { "node_versions": [16, 18] }
+      }
+    }
   }
-]
+}

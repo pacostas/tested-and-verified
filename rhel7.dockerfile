@@ -86,10 +86,7 @@ WORKDIR /app
 COPY ./docker_scripts/* .
 
 ARG ENABLE_CITGM
-
-if [ "$ENABLE_CITGM" = "true" ]; then
-    npm i -g "https://github.com/pacostas/citgm.git#removed-undici"
-fi
+RUN ./install_citgm.sh "$ENABLE_CITGM"
 
 ARG NPM_MODULE
 
