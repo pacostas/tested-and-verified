@@ -1,4 +1,4 @@
-name: Test all module for a specific os
+name: Test module for os
 
 on:
   workflow_dispatch:
@@ -13,22 +13,31 @@ on:
           - "rhel9"
           - "ubuntu20"
           - "ubuntu22"
-      # node_version:
-      #   description: "Specific node version"
-      #   required: false
-      #   type: choice
-      #   default: "all"
-      #   options:
-      #     - "all"
-      #     - "14"
-      #     - "16"
-      #     - "18"
-      #     - "20"
-      # node_module:
-      #   description: "node module to test"
-      #   required: false
-      #   type: string
-      #   default: ""
+      node_version:
+        description: "Specific node version"
+        required: false
+        type: choice
+        default: "all"
+        options:
+          - "all"
+          - "14"
+          - "16"
+          - "18"
+          - "20"
+      node_module:
+        description: "Node module to test"
+        required: false
+        type: choice
+        default: "all"
+        options:
+          - "all"
+          - "express"
+          - "prom-client"
+          - "opposum"
+          - "kube-service-bindings"
+          - "faas-js-runtime"
+          - "cloudevents"
+          - "fastify"
       citgm:
         description: "Run with citgm"
         required: false
@@ -40,11 +49,10 @@ on:
 
 jobs:
   preparation:
-    name: Preparation
+    name: Preparation for ${{inputs.os}}
     runs-on: ubuntu-latest
     outputs:
-      supported_node_versions: ${{ steps.get-supported-node-versions.outputs.supported_node_versions }}
-      supported_modules: ${{ steps.get-supported-modules.outputs.supported_modules }}
+      module_node_version: ${{ steps.get-supported-modules-and-node-versions.outputs.module_node_version }}
     steps:
       - name: checkout code
         uses: actions/checkout@v4
@@ -52,13 +60,22 @@ jobs:
       - name: Get supported modules and node versions for ${{inputs.os}}
         id: get-supported-modules-and-node-versions
         run: |
-          os="rhel7"
-          modules=$(jq -r 'keys[]' supported_modules.json)
-          node_versions=($(jq -r '.[]' ./supported_node_versions.json))
+
+          if [[ ${{inputs.node_module}} == "all" ]]; then
+            modules=$(jq -r 'keys[]' supported_modules.json)
+          else
+            modules=( ${{inputs.node_module}} )
+          fi
+
+          if [[ ${{inputs.node_version}} == "all" ]]; then
+            node_versions=($(jq -r '.[]' ./supported_node_versions.json))
+          else
+            node_versions=( ${{inputs.node_version}} )
+          fi
 
           for module in $modules; do
 
-            skip_versions=($(jq -r ".[\"$module\"].platforms.skip.${{inputs.os}}.node_versions[]" ./supported_modules.json))
+            skip_versions=($(jq -r ".[\"$module\"].skip.${{inputs.os}}.node_versions[]?" ./supported_modules.json))
 
             for node_version in "${node_versions[@]}"; do
 
@@ -73,35 +90,34 @@ jobs:
                 continue
               fi
 
-              module_node_versions+=("{\"name\": \"$module\", \"node_version\": \"$node_version\"}")
+              module_node_versions+=("{\"job\": \"${module}_${node_version}\", \"name\": \"$module\", \"node_version\": \"$node_version\"}")
             done
           done
 
-          for module_node_version in "${module_node_versions[@]}"; do
-            echo "Module and Node version: $module_node_version"
-          done
+          json_module_node_version=$(printf '%s\n' "${module_node_versions[@]}" | jq -R . | jq -s . | jq -c .)
+          echo "module_node_version=$json_module_node_version" >> $GITHUB_OUTPUT
 
-  # test_all_modules:
-  #   needs: preparation
-  #   name: Test all modules
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       node-version: ${{ fromJSON(needs.preparation.outputs.supported_node_versions) }}
-  #       module: ${{ fromJSON(needs.preparation.outputs.supported_modules) }}
+  test_all_modules:
+    needs: preparation
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module_node_version: ${{ fromJson(needs.preparation.outputs.module_node_version) }}
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
 
-  #   steps:
-  #     - name: checkout code
-  #       uses: actions/checkout@v4
+      - name: Parse node version and module name
+        id: parse_node_and_module
+        run: |
+          node_version=$(echo '${{ matrix.module_node_version }}' | jq -r '.node_version')
+          echo "node_version=$node_version" >> $GITHUB_OUTPUT
 
-  #     - name: is node supported by module
-  #       id: module_support
-  #       run: echo "::set-output name=is_module_supported::true"
+          module_name=$(echo '${{ matrix.module_node_version }}' | jq -r '.name')
+          echo "module_name=$module_name" >> $GITHUB_OUTPUT
 
-  #     - name: Run something
-  #       if: ${{ steps.module_support.outputs.is_module_supported != 'true' }}
-  #       run: |
-  #         echo "****"
-  #         echo '${{ steps.module_support.outputs.is_module_supported }}'
-  #         echo "***"
-  #         echo 'docker build . -f ${{inputs.os}}.dockerfile --build-arg NODE_VERSION=${{ matrix.node-version }} --build-arg ENABLE_CITGM=${{ inputs.citgm }}'
+      - name: Run something
+        run: |
+          echo "docker build . -f ${{inputs.os}}.dockerfile --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} --build-arg NODE_VERSION=${{ steps.parse_node_and_module.outputs.node_version }} --build-arg ENABLE_CITGM=${{ inputs.citgm }}"

@@ -1,51 +1,37 @@
 {
   "express": {
-    "platforms": {
-      "skip": {
-        "rhel7": { "node_versions": [16, 18] }
-      }
+    "skip": {
+      "rhel7": { "node_versions": [16, 18] }
     }
   },
   "prom-client": {
-    "platforms": {
-      "skip": {
-        "rhel7": { "node_versions": [16, 18] }
-      }
+    "skip": {
+      "rhel7": { "node_versions": [16, 18] }
     }
   },
   "opossum": {
-    "platforms": {
-      "skip": {
-        "rhel7": { "node_versions": [16, 18] }
-      }
+    "skip": {
+      "rhel7": { "node_versions": [16, 18] }
     }
   },
   "kube-service-bindings": {
-    "platforms": {
-      "skip": {
-        "rhel7": { "node_versions": [16, 18] }
-      }
+    "skip": {
+      "rhel7": { "node_versions": [16, 18] }
     }
   },
   "faas-js-runtime": {
-    "platforms": {
-      "skip": {
-        "rhel7": { "node_versions": [16, 18] }
-      }
+    "skip": {
+      "rhel7": { "node_versions": [16, 18] }
     }
   },
   "cloudevents": {
-    "platforms": {
-      "skip": {
-        "rhel7": { "node_versions": [16, 18] }
-      }
+    "skip": {
+      "rhel7": { "node_versions": [16, 18] }
     }
   },
   "fastify": {
-    "platforms": {
-      "skip": {
-        "rhel7": { "node_versions": [16, 18] }
-      }
+    "skip": {
+      "rhel7": { "node_versions": [16, 18] }
     }
   }
 }
