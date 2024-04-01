@@ -27,7 +27,6 @@
       }
     }
   },
-
   "faas-js-runtime": {
     "platforms": {
       "skip": {
