@@ -54,6 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       module_node_version: ${{ steps.get-supported-modules-and-node-versions.outputs.module_node_version }}
+      machine: ${{ steps.container-or-host.outputs.machine }}
     steps:
       - name: checkout code
         uses: actions/checkout@v4
@@ -98,6 +99,15 @@ jobs:
           json_module_node_version=$(printf '%s\n' "${module_node_versions[@]}" | jq -R . | jq -s . | jq -c .)
           echo "module_node_version=$json_module_node_version" >> $GITHUB_OUTPUT
 
+      - name: Set env variables
+        id: container-or-host
+        run: |
+          if [[ ${{inputs.os}} == "ubuntu_latest_host" ]]; then
+            echo "machine=host" >> $GITHUB_OUTPUT
+          else
+            echo "machine=container" >> $GITHUB_OUTPUT
+          fi
+
   test_all_modules:
     needs: preparation
     name: Test
@@ -121,19 +131,21 @@ jobs:
 
       - name: Use Node.js
         uses: actions/setup-node@v4
-        if: github.event.inputs.os == 'ubuntu_latest_host'
+        if: ${{ needs.preparation.outputs.machine == 'host' }}
         with:
           node-version: ${{ steps.parse_node_and_module.outputs.node_version }}
 
-      - name: Run on os:${{ inputs.os }}, node:${{ steps.parse_node_and_module.outputs.node_version }}, module:${{ steps.parse_node_and_module.outputs.module_name }}, citgm:${{ inputs.citgm }}
+      - name: Run on Host, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
+        if: ${{ needs.preparation.outputs.machine == 'host' }}
         run: |
-          if [[ ${{inputs.os}} == "ubuntu_latest_host" ]]; then
-            # echo './docker_scripts/run_package_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"'
-            ./docker_scripts/run_package_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"
-          else
-            # echo "docker build . -f ${{inputs.os}}.dockerfile "
-            docker build . -f ${{inputs.os}}.dockerfile \
-            --build-arg NODE_VERSION=${{ steps.parse_node_and_module.outputs.node_version }} \
-            --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} \
-            --build-arg ENABLE_CITGM=${{ inputs.citgm }}
-          fi
+          # echo './docker_scripts/run_package_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"'
+          ./docker_scripts/run_package_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"
+
+      - name: Run on container, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
+        if: ${{ needs.preparation.outputs.machine == 'container' }}
+        run: |
+          # echo "docker build . -f ${{inputs.os}}.dockerfile "
+          docker build . -f ${{inputs.os}}.dockerfile \
+          --build-arg NODE_VERSION=${{ steps.parse_node_and_module.outputs.node_version }} \
+          --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} \
+          --build-arg ENABLE_CITGM=${{ inputs.citgm }}
