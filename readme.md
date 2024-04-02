@@ -24,7 +24,7 @@ You will get an output, for the specified range on the specified os. In case the
 - On specific platform (rhel8) for a specific node module (faas) with a specific node version (18)
 
 ```bash
-    docker build . -f rhel8.dockerfile  --build-arg NPM_MODULE=faas --build-arg NODE_VERSION=18 --build-arg ENABLE_CITGM=false
+    docker build . -f rhel8.dockerfile  --build-arg NPM_MODULE=faas-js-rutime --build-arg NODE_VERSION=18 --build-arg ENABLE_CITGM=false
 ```
 
 - On specific platform (rhel8) for all node modules with a specific node version (20)

@@ -12,7 +12,7 @@ else
   echo "repositoryUrl: $repositoryUrl"
   echo "module_github_name: $module_github_name"
   git clone "https://github.com/${module_github_name}.git"
-  cd $(basename $module_github_name)
+  cd "${module_github_name##*/}"
   npm i
   npm run test
 fi
