@@ -4,6 +4,7 @@ NPM_MODULE=$1
 ENABLE_CITGM=$2
 
 if [ "$ENABLE_CITGM" = "true" ]; then
+  npm i -g citgm
   citgm $NPM_MODULE
 else
   response=$(curl -s "https://registry.npmjs.org/${NPM_MODULE}")

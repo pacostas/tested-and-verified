@@ -13,6 +13,7 @@ on:
           - "rhel9"
           - "ubuntu20"
           - "ubuntu22"
+          - "ubuntu-latest-host"
       node_version:
         description: "Specific node version"
         required: false
@@ -62,9 +63,9 @@ jobs:
         run: |
 
           if [[ ${{inputs.node_module}} == "all" ]]; then
-            modules=$(jq -r 'keys[]' supported_modules.json)
+            modules=$(jq -r 'keys[]' ./supported_modules.json)
           else
-            modules=( ${{inputs.node_module}} )
+            modules=( "${{inputs.node_module}}" )
           fi
 
           if [[ ${{inputs.node_version}} == "all" ]]; then
@@ -118,6 +119,14 @@ jobs:
           module_name=$(echo '${{ matrix.module_node_version }}' | jq -r '.name')
           echo "module_name=$module_name" >> $GITHUB_OUTPUT
 
-      - name: Run something
+      - name: Run on os:${{ inputs.os }}, node:${{ steps.parse_node_and_module.outputs.node_version }}, module:${{ steps.parse_node_and_module.outputs.module_name }}, citgm:${{ inputs.citgm }}
         run: |
-          echo "docker build . -f ${{inputs.os}}.dockerfile --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} --build-arg NODE_VERSION=${{ steps.parse_node_and_module.outputs.node_version }} --build-arg ENABLE_CITGM=${{ inputs.citgm }}"
+          if [[ ${{inputs.os}} == "ubuntu-latest-host" ]]; then
+            echo './run_package_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"'
+          else
+            echo "docker build . -f ${{inputs.os}}.dockerfile "
+            # docker build . -f ${{inputs.os}}.dockerfile \
+            # --build-arg NODE_VERSION=${{ steps.parse_node_and_module.outputs.node_version }} \
+            # --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} \
+            # --build-arg ENABLE_CITGM=${{ inputs.citgm }}
+          fi
