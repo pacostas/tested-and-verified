@@ -1,7 +1,7 @@
 FROM ubuntu:22.04
 WORKDIR /app
 
-COPY ./docker_scripts/* .
+COPY ./container_scripts/* .
 
 RUN apt-get update && apt-get install -y curl
 ARG NODE_VERSION

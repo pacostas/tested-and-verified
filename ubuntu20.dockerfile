@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 WORKDIR /app
 
-COPY ./docker_scripts/* .
+COPY ./container_scripts/* .
 
 ARG NODE_VERSION
 RUN ./select_node_version.sh "$NODE_VERSION" "ubuntu"

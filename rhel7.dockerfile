@@ -87,7 +87,7 @@ USER 1001
 # CMD $STI_SCRIPTS_PATH/usage
 WORKDIR /app
 
-COPY ./docker_scripts/* .
+COPY ./container_scripts/* .
 
 ARG NPM_MODULE
 ARG ENABLE_CITGM

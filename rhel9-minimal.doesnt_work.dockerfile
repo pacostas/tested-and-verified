@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi9/nodejs-${NODE_VERSION}-minimal
 
 WORKDIR /app
 
-COPY ./docker_scripts/* .
+COPY ./container_scripts/* .
 
 ARG NPM_MODULE
 ARG ENABLE_CITGM

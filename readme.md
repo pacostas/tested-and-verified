@@ -19,7 +19,7 @@ Put all the logs under the directory `logs` and execute below script
 
 You will get an output, for the specified range on the specified os. In case there is not `oss` or `start-date`, `end-date` argument, it returns for all the values eg. all operating systems for all the dates that are available on the logs.
 
-## Run tests
+## Run tests locally
 
 - On specific platform (rhel8) for a specific node module (faas) with a specific node version (18)
 
@@ -41,6 +41,10 @@ You will get an output, for the specified range on the specified os. In case the
 
 - On specific platform (rhel8) for all node modules with a specific node version (20), with citgm
 
-## Questions
+```bash
+./run_all.sh -oss rhel8 -nvs "20" --citgm true
+```
 
-- What is the difference between this image `registry.access.redhat.com/ubi8/nodejs-20` and this image `registry.access.redhat.com/ubi8/s2i-core:1`
+## Run tests with github workflow
+
+* Visit the actions page of this repo and for the job, "test all modules", specify the arguments for the packages and the node versions you would like to run the tests against.
