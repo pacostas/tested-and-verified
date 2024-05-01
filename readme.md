@@ -11,10 +11,18 @@ This repo has a set of tools:
 
 ## Parse the logs
 
+Download the whole logs folder from google drive.
+
+```bash
+cd tested_and_verified 
+unzip ~/Downloads/<log-zip-file>.zip  -d .
+
+```
+
 Put all the logs under the directory `logs` and execute below script
 
 ```bash
-./get_results.sh -bd ../logs -oss rhel9 --start-date 2024-02-02 --end-date 2024-03-03
+./parse_results.sh -os rhel9  --start-date 2024-03-13 --end-date 2024-05-01 2>/dev/null 
 ```
 
 You will get an output, for the specified range on the specified os. In case there is not `oss` or `start-date`, `end-date` argument, it returns for all the values eg. all operating systems for all the dates that are available on the logs.

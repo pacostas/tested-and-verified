@@ -28,6 +28,11 @@ function main {
             shift 2
             ;;
 
+        --specific-date | -spd)
+            specific_date="${2}"
+            shift 2
+            ;;
+
         --help | -h)
             shift 1
             usage
@@ -46,9 +51,12 @@ function main {
     done
 
     if [[ -z "${base_directory:-}" ]]; then
-        usage
-        echo
-        print::error "--base-directory"
+        base_directory="./logs"
+    fi
+
+    if [[ -n "${specific_date}" ]]; then
+        start_date="${specific_date}"
+        end_date="${specific_date}"
     fi
 
     parse_data "${base_directory}" "${exclude_directory}" "${os}" "${start_date}" "${end_date}"
@@ -56,15 +64,16 @@ function main {
 
 function usage() {
     cat <<-USAGE
-get_results.sh --base-directory <path to log files> [OPTIONS]
+parse_results.sh --base-directory <path to log files> [OPTIONS]
 
 OPTIONS
   --help                                -h                  prints the command usage
   --base-directory      <path-to-logs>  -bd <path-to-logs>  specifies path to the directory that the logs are located
   --exclude-directory   <path-to-dir>   -ed <path-to-dir>   specifies the directory to exclude from the search
   --operating-system    <os>            -os <os>            specifies the operating system to search for logs
-  --start-date          <date>          -sd <date>          specifies the date until to search the logs e.g. 2024-02-09 defults to 0
+  --start-date          <date>          -sd <date>          specifies the date until to search the logs e.g. 2024-02-09 defaults to 0
   --end-date            <date>          -ed <date>          specifies the date after to search the logs e.g. 2024-02-09 defaults to 9999-12-31
+  --specific-date       <date>          -spd <date>         specifies the date to search the logs e.g. 2024-02-09
 USAGE
 }
 
@@ -117,7 +126,6 @@ function parse_data() {
 
         # Check if the item is a directory, if the directory should be excluded and if the directory is empty
         if [[ -d "$directory" && "$directory" != "$exclude_directory" && -n "$(ls -A "$directory")" ]]; then
-            echo "Directory: $directory"
 
             # List all files in the current directory
             for file in "$directory"/*; do
@@ -125,8 +133,9 @@ function parse_data() {
 
                     # Store the result of the grep command in a variable
                     result=$(cat $file | grep -zoP "\n=[=]+\nTests[a-zA-Z 0-9]+/nodejs-[0-9]+.+\n=[=]+\nTest.+\n\n( \[(PASSED|FAILED)\] for \'clients\' [a-z_]+ \([0-9:]+\)\n)+")
-
-                    echo $result | grep -oP '(?<=Tests were run for image '"$os_version"'/)\S+|PASSED|FAILED'
+                    echo -n -e "date \t$(basename "$directory")\t"
+                    echo $result | grep -oP '(?<=Tests were run for image '"$os_version"'/)\S+|PASSED|FAILED' | go run ./main.go
+                    echo ""
                 fi
             done
         fi
