@@ -3,7 +3,7 @@
 NPM_MODULE=$1
 ENABLE_CITGM=$2
 
-PACKAGE_MANAGER=$(jq -r .$NPM_MODULE.package_manager ./supported_modules.json)
+PACKAGE_MANAGER=$(jq -r .[\"${NPM_MODULE}\"].package_manager ./supported_modules.json)
 
 if [ "$ENABLE_CITGM" = "true" ]; then
   npm i -g citgm
