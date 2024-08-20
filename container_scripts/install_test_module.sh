@@ -18,6 +18,7 @@ else
   cd "${module_github_name##*/}"
 
   if [ "$PACKAGE_MANAGER" = "yarn" ]; then
+    npm install --global yarn
     yarn install
     yarn test
   else
