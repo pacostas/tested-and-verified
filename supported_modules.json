@@ -5,11 +5,7 @@
   "prom-client": {
     "skip": {}
   },
-  "opossum": {
-    "skip": {
-      "rhel8": { "node_versions": [18] }
-    }
-  },
+  "opossum": {},
   "kube-service-bindings": {
     "skip": {}
   },
@@ -20,12 +16,18 @@
     "skip": {}
   },
   "fastify": {
-    "skip": {}
+    "skip": {
+      "rhel8": { "node_versions": [18] },
+      "rhel9": { "node_versions": [18] }
+    }
   },
   "pino": {
     "skip": {}
   },
   "langchain": {
+    "skip": {}
+  },
+  "@langchain/core": {
     "skip": {}
   }
 }
