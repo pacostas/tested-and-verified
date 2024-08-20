@@ -64,7 +64,7 @@ jobs:
       - name: Get supported modules and node versions for ${{inputs.os}}
         id: get-supported-modules-and-node-versions
         run: |
-          ./.github/scripts/get_supported_modules_and_node_versions.sh  ${{inputs.node_module}} ${{inputs.node_version}} ${{inputs.os}} >> $GITHUB_OUTPUT
+          ./.github/scripts/get_supported_modules_and_node_versions.sh  ${{inputs.node_module}} "${{inputs.node_version}}" ${{inputs.os}} >> $GITHUB_OUTPUT
 
       - name: Set env variables
         id: container-or-host
