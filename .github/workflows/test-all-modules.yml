@@ -110,7 +110,7 @@ jobs:
       - name: Run on container, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
         if: ${{ needs.preparation.outputs.machine == 'container' }}
         run: |
-          ./test --operating-systems ${{inputs.os}} \
+          ./test.sh --operating-systems ${{inputs.os}} \
           --node-versions ${{ steps.parse_node_and_module.outputs.node_version }} \
           --packages ${{ steps.parse_node_and_module.outputs.module_name }} \
           --citgm ${{ inputs.citgm }}
