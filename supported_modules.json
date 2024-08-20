@@ -25,9 +25,11 @@
     "skip": {}
   },
   "langchain": {
-    "skip": {}
+    "skip": {},
+    "package_manager": "yarn"
   },
   "@langchain/core": {
-    "skip": {}
+    "skip": {},
+    "package_manager": "yarn"
   }
 }

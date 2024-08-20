@@ -105,7 +105,7 @@ jobs:
       - name: Run on Host, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
         if: ${{ needs.preparation.outputs.machine == 'host' }}
         run: |
-          ./docker_scripts/install_test_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"
+          ./container_scripts/install_test_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"
 
       - name: Run on container, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
         if: ${{ needs.preparation.outputs.machine == 'container' }}

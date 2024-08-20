@@ -3,6 +3,8 @@
 NPM_MODULE=$1
 ENABLE_CITGM=$2
 
+PACKAGE_MANAGER=$(jq .$NPM_MODULE.package_manager ./supported_modules.json )
+
 if [ "$ENABLE_CITGM" = "true" ]; then
   npm i -g citgm
   citgm $NPM_MODULE
@@ -14,6 +16,13 @@ else
   echo "module_github_name: $module_github_name"
   git clone "https://github.com/${module_github_name}.git"
   cd "${module_github_name##*/}"
-  npm i
-  npm run test
+
+
+  if [ "$PACKAGE_MANAGER" = "yarn" ]; then
+    yarn install
+    yarn test
+  else
+    npm install
+    npm test
+  fi
 fi
