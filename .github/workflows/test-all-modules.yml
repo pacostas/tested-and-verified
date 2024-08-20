@@ -35,6 +35,7 @@ on:
           - "fastify"
           - "pino"
           - "langchain"
+          - "@langchain/core"
       node_module_text:
         description: "Test any node module that exists on npm registry"
         required: false
