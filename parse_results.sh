@@ -110,8 +110,6 @@ function parse_data() {
         os_version="ubi9"
     elif [[ ${os} == "rhel8" ]]; then
         os_version="ubi8"
-    elif [[ ${os} == "rhel7" ]]; then
-        os_version="rhel7"
     else
         echo "Invalid operating system"
         exit 1
