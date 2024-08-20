@@ -8,23 +8,17 @@ on:
         required: true
         type: choice
         options:
-          - "rhel7"
           - "rhel8"
           - "rhel9"
           - "ubuntu20"
           - "ubuntu22"
+          - "fedora"
           - "ubuntu_latest_host"
       node_version:
-        description: "Specific node version"
-        required: false
-        type: choice
-        default: "all"
-        options:
-          - "all"
-          - "14"
-          - "16"
-          - "18"
-          - "20"
+        description: "Set node versions (separated by space)"
+        required: true
+        type: string
+      ## Below options should be synced with the suported_modules.json file
       node_module:
         description: "Node module to test"
         required: false
@@ -39,6 +33,13 @@ on:
           - "faas-js-runtime"
           - "cloudevents"
           - "fastify"
+          - "pino"
+          - "langchain"
+      node_module_text:
+        description: "Test any node module that exists on npm registry"
+        required: false
+        type: string
+        default: ""
       citgm:
         description: "Run with citgm"
         required: false
@@ -62,42 +63,7 @@ jobs:
       - name: Get supported modules and node versions for ${{inputs.os}}
         id: get-supported-modules-and-node-versions
         run: |
-
-          if [[ ${{inputs.node_module}} == "all" ]]; then
-            modules=$(jq -r 'keys[]' ./supported_modules.json)
-          else
-            modules=( "${{inputs.node_module}}" )
-          fi
-
-          if [[ ${{inputs.node_version}} == "all" ]]; then
-            node_versions=($(jq -r '.[]' ./supported_node_versions.json))
-          else
-            node_versions=( ${{inputs.node_version}} )
-          fi
-
-          for module in "${modules[@]}"; do
-
-            skip_versions=($(jq -r ".[\"$module\"].skip.${{inputs.os}}.node_versions[]?" ./supported_modules.json))
-
-            for node_version in "${node_versions[@]}"; do
-
-              skip=false
-              for skip_version in "${skip_versions[@]}"; do
-                if [[ "$node_version" == "$skip_version" ]]; then
-                  skip=true
-                  break
-                fi
-              done
-              if $skip; then
-                continue
-              fi
-
-              module_node_versions+=("{\"job\": \"${module}_${node_version}\", \"name\": \"$module\", \"node_version\": \"$node_version\"}")
-            done
-          done
-
-          json_module_node_version=$(printf '%s\n' "${module_node_versions[@]}" | jq -R . | jq -s . | jq -c .)
-          echo "module_node_version=$json_module_node_version" >> $GITHUB_OUTPUT
+          ./.github/scripts/get_supported_modules_and_node_versions.sh  ${{inputs.node_module}} ${{inputs.node_version}} ${{inputs.os}} >> $GITHUB_OUTPUT
 
       - name: Set env variables
         id: container-or-host
@@ -138,12 +104,12 @@ jobs:
       - name: Run on Host, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
         if: ${{ needs.preparation.outputs.machine == 'host' }}
         run: |
-          ./docker_scripts/run_package_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"
+          ./docker_scripts/install_test_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"
 
       - name: Run on container, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
         if: ${{ needs.preparation.outputs.machine == 'container' }}
         run: |
-          docker build . -f ${{inputs.os}}.dockerfile \
-          --build-arg NODE_VERSION=${{ steps.parse_node_and_module.outputs.node_version }} \
-          --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} \
-          --build-arg ENABLE_CITGM=${{ inputs.citgm }}
+          ./test --operating-systems ${{inputs.os}} \
+          --node-versions ${{ steps.parse_node_and_module.outputs.node_version }} \
+          --packages ${{ steps.parse_node_and_module.outputs.module_name }} \
+          --citgm ${{ inputs.citgm }}

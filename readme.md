@@ -3,7 +3,7 @@
 This repo has a set of tools:
 
 - for parsing the logs
-- test any module on rhel7, rhel8, rhel9, ubuntu20 and ubuntu22
+- test any module on rhel8, rhel9, fedora, ubuntu20 and ubuntu22 against any supported node version
 
 ## Modules & node versions we support
 
@@ -29,28 +29,22 @@ You will get an output, for the specified range on the specified os. In case the
 
 ## Run tests locally
 
-- On specific platform (rhel8) for a specific node module (faas) with a specific node version (18)
+- On specific platform (rhel8) for all node modules with a specific node versions (20 and 18)
 
 ```bash
-    docker build . -f rhel8.dockerfile  --build-arg NPM_MODULE=faas-js-rutime --build-arg NODE_VERSION=18 --build-arg ENABLE_CITGM=false
-```
-
-- On specific platform (rhel8) for all node modules with a specific node version (20)
-
-```bash
-./run_all.sh -oss rhel8 -nvs "20"
-```
-
-- On a specific pltaform (rhel8) for all node modules with all node versions
-
-```bash
-./run_all.sh -oss rhel8
+./test.sh -oss rhel8 -nvs "20 18"
 ```
 
 - On specific platform (rhel8) for all node modules with a specific node version (20), with citgm
 
 ```bash
-./run_all.sh -oss rhel8 -nvs "20" --citgm true
+./test.sh -oss rhel8 -nvs "20" --citgm true
+```
+
+- On specific platform (rhel8) for all node version with a specific node module (pino)
+
+```bash
+./test.sh -oss rhel8 -pckgs pino
 ```
 
 ## Run tests with github workflow

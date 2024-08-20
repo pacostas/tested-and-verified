@@ -1,37 +1,31 @@
 {
   "express": {
-    "skip": {
-      "rhel7": { "node_versions": [16, 18] }
-    }
+    "skip": {}
   },
   "prom-client": {
-    "skip": {
-      "rhel7": { "node_versions": [16, 18] }
-    }
+    "skip": {}
   },
   "opossum": {
     "skip": {
-      "rhel7": { "node_versions": [16, 18] }
+      "rhel8": { "node_versions": [18] }
     }
   },
   "kube-service-bindings": {
-    "skip": {
-      "rhel7": { "node_versions": [16, 18] }
-    }
+    "skip": {}
   },
   "faas-js-runtime": {
-    "skip": {
-      "rhel7": { "node_versions": [16, 18] }
-    }
+    "skip": {}
   },
   "cloudevents": {
-    "skip": {
-      "rhel7": { "node_versions": [16, 18] }
-    }
+    "skip": {}
   },
   "fastify": {
-    "skip": {
-      "rhel7": { "node_versions": [16, 18] }
-    }
+    "skip": {}
+  },
+  "pino": {
+    "skip": {}
+  },
+  "langchain": {
+    "skip": {}
   }
 }
