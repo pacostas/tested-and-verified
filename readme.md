@@ -5,26 +5,17 @@ This repo has a set of tools:
 - for parsing the logs
 - test any module on rhel8, rhel9, fedora, ubuntu20 and ubuntu22 against any supported node version
 
-## Modules & node versions we support
-
-- The modules we support are listed here: https://access.redhat.com/articles/3348731 on the nodejs section.
-
 ## Parse the logs
 
 Download the whole logs folder from google drive.
 
 ```bash
 cd tested_and_verified 
-unzip ~/Downloads/<log-zip-file>.zip  -d .
-
-```
-
-Put all the logs under the directory `logs` and execute below script
-
-```bash
+rm -rf ./logs && mkdir ./logs
+unzip ~/Downloads/<log-zip-file>.zip  -d ./logs
 ./parse_results.sh -os rhel9  --start-date 2024-03-13 --end-date 2024-05-01 2>/dev/null 
-```
 
+```
 You will get an output, for the specified range on the specified os. In case there is not `oss` or `start-date`, `end-date` argument, it returns for all the values eg. all operating systems for all the dates that are available on the logs.
 
 ## Run tests locally
