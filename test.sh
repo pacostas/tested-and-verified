@@ -102,7 +102,10 @@ run_tests() {
     for os in $oss; do
         for node_version in $node_versions; do
             for package in $packages; do
-                docker build . -f ./containerfiles/$os.dockerfile --build-arg NPM_MODULE=$package --build-arg ENABLE_CITGM=$citgm --build-arg NODE_VERSION=$node_version
+                docker build . -f ./containerfiles/Dockerfile.$os \
+                --build-arg NPM_MODULE=$package \
+                --build-arg ENABLE_CITGM=$citgm \
+                --build-arg NODE_VERSION=$node_version --progress=plain 2>&1 | tee -a build_output.log
             done
         done
     done

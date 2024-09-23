@@ -4,27 +4,30 @@ on:
   workflow_dispatch:
     inputs:
       os:
-        description: "Operating System to test against"
+        description: "Operating System"
         required: true
         type: choice
         options:
           - "rhel8"
           - "rhel9"
+          - "c9s"
+          - "c10s"
           - "ubuntu20"
           - "ubuntu22"
-          - "fedora"
+          - "fedora38"
+          - "fedora40"
           - "ubuntu_latest_host"
       node_versions:
-        description: "Set node versions (separated by space)"
+        description: "Node version(s) -separate with space"
         required: true
         type: string
       npm_packages:
-        description: "Set npm package (separated by space) or all"
+        description: "Npm package -separated by space or all to test all"
         required: true
         type: string
         default: ""
       citgm:
-        description: "Run with citgm"
+        description: "Citgm"
         required: false
         type: choice
         default: "false"
@@ -96,3 +99,10 @@ jobs:
           --node-versions ${{ steps.parse_node_and_module.outputs.node_version }} \
           --packages ${{ steps.parse_node_and_module.outputs.module_name }} \
           --citgm ${{ inputs.citgm }}
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: result-os-${{inputs.os}}-node_version-${{ steps.parse_node_and_module.outputs.node_version }}-npm-package-${{ steps.parse_node_and_module.outputs.module_name }}-citgm-${{ inputs.citgm }}
+          path: build_output.log
+          if-no-files-found: error
