@@ -14,31 +14,13 @@ on:
           - "ubuntu22"
           - "fedora"
           - "ubuntu_latest_host"
-      node_version:
+      node_versions:
         description: "Set node versions (separated by space)"
         required: true
         type: string
-      ## Below options should be synced with the suported_modules.json file
-      node_module:
-        description: "Node module to test"
-        required: false
-        type: choice
-        default: "all"
-        options:
-          - "all"
-          - "express"
-          - "prom-client"
-          - "opposum"
-          - "kube-service-bindings"
-          - "faas-js-runtime"
-          - "cloudevents"
-          - "fastify"
-          - "pino"
-          - "langchain"
-          - "@langchain/core"
-      node_module_text:
-        description: "Test any node module that exists on npm registry"
-        required: false
+      npm_packages:
+        description: "Set npm package (separated by space) or all"
+        required: true
         type: string
         default: ""
       citgm:
@@ -64,7 +46,7 @@ jobs:
       - name: Get supported modules and node versions for ${{inputs.os}}
         id: get-supported-modules-and-node-versions
         run: |
-          ./.github/scripts/get_supported_modules_and_node_versions.sh  ${{inputs.node_module}} "${{inputs.node_version}}" ${{inputs.os}} >> $GITHUB_OUTPUT
+          ./.github/scripts/get_supported_modules_and_node_versions.sh  "${{inputs.npm_packages}}" "${{inputs.node_versions}}" ${{inputs.os}} >> $GITHUB_OUTPUT
 
       - name: Set env variables
         id: container-or-host
