@@ -6,7 +6,7 @@ COPY ../container_scripts/* .
 COPY ../supported_modules.json .
 
 ARG NODE_VERSION
-RUN ./install_node_engine.sh "$NODE_VERSION" "rhel"
+RUN ./install_dependencies.sh "$NODE_VERSION" "rhel"
 
 ARG NPM_MODULE
 ARG ENABLE_CITGM

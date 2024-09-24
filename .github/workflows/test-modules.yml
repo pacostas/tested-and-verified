@@ -17,8 +17,6 @@ on:
           - "rhel9"
           - "fedora38"
           - "fedora40"
-          - "c9s"
-          - "c10s"
           - "ubuntu20"
           - "ubuntu22"
           - "ubuntu24"
@@ -118,7 +116,7 @@ jobs:
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: result-os-${{inputs.os}}-node_version-${{ steps.parse_node_and_module.outputs.node_version }}-npm-package-${{ steps.format-string.outputs.module_name }}-citgm-${{ inputs.citgm }}
+          name: result-os-${{inputs.os}}-node-${{ steps.parse_node_and_module.outputs.node_version }}-package-${{ steps.format-string.outputs.module_name }}-citgm-${{ inputs.citgm }}
           path: build_output.log
           if-no-files-found: error
 
