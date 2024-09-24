@@ -15,12 +15,13 @@ on:
         options:
           - "rhel8"
           - "rhel9"
+          - "fedora38"
+          - "fedora40"
           - "c9s"
           - "c10s"
           - "ubuntu20"
           - "ubuntu22"
-          - "fedora38"
-          - "fedora40"
+          - "ubuntu24"
           - "ubuntu_latest_host"
       node_versions:
         description: "Node version(s) -separate with space"
