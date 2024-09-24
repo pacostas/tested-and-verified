@@ -110,9 +110,20 @@ jobs:
           --citgm ${{ inputs.citgm }} \
           --save_logs ${{ inputs.save_logs }}
 
+      - name: Format string
+        id: format-string
+        run: |
+          echo "module_name=$(echo "${{ steps.parse_node_and_module.outputs.module_name }}" |  sed 's/@/_/g; s/\//_/g')" >> "$GITHUB_OUTPUT"
+
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: result-os-${{inputs.os}}-node_version-${{ steps.parse_node_and_module.outputs.node_version }}-npm-package-${{ steps.parse_node_and_module.outputs.module_name }}-citgm-${{ inputs.citgm }}
+          name: result-os-${{inputs.os}}-node_version-${{ steps.parse_node_and_module.outputs.node_version }}-npm-package-${{ steps.format-string.outputs.module_name }}-citgm-${{ inputs.citgm }}
           path: build_output.log
           if-no-files-found: error
+
+      - name: Fail the job in case of module test failure
+        run: |
+          if grep -q "ERROR:" build_output.log; then
+            exit 1
+          fi

@@ -112,12 +112,8 @@ run_tests() {
                     docker build . -f ./containerfiles/Dockerfile.$os \
                         --build-arg NPM_MODULE=$package \
                         --build-arg ENABLE_CITGM=$citgm \
-                        --build-arg NODE_VERSION=$node_version --progress=plain 2>&1 | tee -a build_output.log
-
-                    # Check if docker build failed
-                    if [ $? -ne 0 ]; then
-                        exit 1
-                    fi
+                        --build-arg NODE_VERSION=$node_version \
+                        --progress=plain 2>&1 | tee -a build_output.log
                 else
                     docker build . -f ./containerfiles/Dockerfile.$os \
                         --build-arg NPM_MODULE=$package \
