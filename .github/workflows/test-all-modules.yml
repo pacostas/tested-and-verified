@@ -3,6 +3,11 @@ name: Test module for os
 on:
   workflow_dispatch:
     inputs:
+      npm_packages:
+        description: "Npm package -separated by space or all to test all"
+        required: true
+        type: string
+        default: ""
       os:
         description: "Operating System"
         required: true
@@ -21,16 +26,19 @@ on:
         description: "Node version(s) -separate with space"
         required: true
         type: string
-      npm_packages:
-        description: "Npm package -separated by space or all to test all"
-        required: true
-        type: string
-        default: ""
       citgm:
         description: "Citgm"
         required: false
         type: choice
         default: "false"
+        options:
+          - "true"
+          - "false"
+      save_logs:
+        description: "Save logs in workflow artifacts"
+        required: true
+        type: choice
+        default: "true"
         options:
           - "true"
           - "false"
@@ -60,7 +68,7 @@ jobs:
             echo "machine=container" >> $GITHUB_OUTPUT
           fi
 
-  test_all_modules:
+  test_modules:
     needs: preparation
     name: Test
     runs-on: ubuntu-latest
@@ -98,7 +106,8 @@ jobs:
           ./test.sh --operating-systems ${{inputs.os}} \
           --node-versions ${{ steps.parse_node_and_module.outputs.node_version }} \
           --packages ${{ steps.parse_node_and_module.outputs.module_name }} \
-          --citgm ${{ inputs.citgm }}
+          --citgm ${{ inputs.citgm }} \
+          --save_logs ${{ inputs.save_logs }}
 
       - name: Upload results
         uses: actions/upload-artifact@v4

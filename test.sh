@@ -24,6 +24,11 @@ function main {
             shift 2
             ;;
 
+        --save_logs | -sl)
+            save_logs="${2}"
+            shift 2
+            ;;
+
         --help | -h)
             shift 1
             usage
@@ -53,7 +58,6 @@ function main {
         print::error "--operating-systems"
     fi
 
-
     if [[ -z "$citgm" ]]; then
         citgm="false"
     fi
@@ -62,7 +66,11 @@ function main {
         packages=$(jq -r 'keys | .' ./supported_modules.json | tr -d '[]" ' | tr ',' ' ')
     fi
 
-    run_tests "$oss" "$citgm" "$node_versions" "$packages"
+    if [[ -z "$save_logs" ]]; then
+        save_logs="false"
+    fi
+
+    run_tests "$oss" "$citgm" "$node_versions" "$packages" "$save_logs"
 }
 
 function print::error() {
@@ -95,17 +103,27 @@ run_tests() {
     local citgm="${2}"
     local node_versions="${3}"
     local packages="${4}"
-
-
-## TODO add a skip in case of the vesion is skipped.
+    local save_logs="${5}"
 
     for os in $oss; do
         for node_version in $node_versions; do
             for package in $packages; do
-                docker build . -f ./containerfiles/Dockerfile.$os \
-                --build-arg NPM_MODULE=$package \
-                --build-arg ENABLE_CITGM=$citgm \
-                --build-arg NODE_VERSION=$node_version --progress=plain 2>&1 | tee -a build_output.log
+                if [ "$save_logs" = "true" ]; then
+                    docker build . -f ./containerfiles/Dockerfile.$os \
+                        --build-arg NPM_MODULE=$package \
+                        --build-arg ENABLE_CITGM=$citgm \
+                        --build-arg NODE_VERSION=$node_version --progress=plain 2>&1 | tee -a build_output.log
+
+                    # Check if docker build failed
+                    if [ $? -ne 0 ]; then
+                        exit 1
+                    fi
+                else
+                    docker build . -f ./containerfiles/Dockerfile.$os \
+                        --build-arg NPM_MODULE=$package \
+                        --build-arg ENABLE_CITGM=$citgm \
+                        --build-arg NODE_VERSION=$node_version
+                fi
             done
         done
     done
