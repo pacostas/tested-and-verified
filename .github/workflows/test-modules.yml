@@ -1,4 +1,4 @@
-name: Test module for os
+name: Test Specific modules
 
 on:
   workflow_dispatch:
@@ -22,11 +22,11 @@ on:
           - "ubuntu24"
           - "ubuntu_latest_host"
       node_versions:
-        description: "Node version(s) -separate with space"
+        description: "Node version(s) - separate with space"
         required: true
         type: string
       citgm:
-        description: "Citgm"
+        description: "CITGM"
         required: false
         type: choice
         default: "false"
@@ -58,15 +58,6 @@ jobs:
         run: |
           ./.github/scripts/get_supported_modules_and_node_versions.sh  "${{inputs.npm_packages}}" "${{inputs.node_versions}}" ${{inputs.os}} >> $GITHUB_OUTPUT
 
-      - name: Set env variables
-        id: container-or-host
-        run: |
-          if [[ ${{inputs.os}} == "ubuntu_latest_host" ]]; then
-            echo "machine=host" >> $GITHUB_OUTPUT
-          else
-            echo "machine=container" >> $GITHUB_OUTPUT
-          fi
-
   test_modules:
     needs: preparation
     name: Test
@@ -90,23 +81,45 @@ jobs:
 
       - name: Use Node.js
         uses: actions/setup-node@v4
-        if: ${{ needs.preparation.outputs.machine == 'host' }}
+        if: ${{ inputs.os == 'ubuntu_latest_host' }}
         with:
           node-version: ${{ steps.parse_node_and_module.outputs.node_version }}
 
-      - name: Run on Host, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
-        if: ${{ needs.preparation.outputs.machine == 'host' }}
+      - name: OS ${{ inputs.os }} Node ${{ steps.parse_node_and_module.outputs.node_version }} Package ${{ steps.parse_node_and_module.outputs.module_name }} CITGM ${{ inputs.citgm }}
         run: |
-          ./container_scripts/install_test_module.sh "${{ steps.parse_node_and_module.outputs.module_name }}" "${{ inputs.citgm }}"
 
-      - name: Run on container, os ${{ inputs.os }} node ${{ steps.parse_node_and_module.outputs.node_version }} module ${{ steps.parse_node_and_module.outputs.module_name }} citgm ${{ inputs.citgm }}
-        if: ${{ needs.preparation.outputs.machine == 'container' }}
-        run: |
-          ./test.sh --operating-systems ${{inputs.os}} \
-          --node-versions ${{ steps.parse_node_and_module.outputs.node_version }} \
-          --packages ${{ steps.parse_node_and_module.outputs.module_name }} \
-          --citgm ${{ inputs.citgm }} \
-          --save_logs ${{ inputs.save_logs }}
+          if [[ ${{inputs.os}} == "ubuntu_latest_host" ]]; then
+            if [[ ${{ inputs.save_logs }} == "true" ]]; then
+              echo "OS ${{inputs.os}} save logs ${{ inputs.save_logs }}"
+              ./container_scripts/install_test_module.sh \
+                  "${{ steps.parse_node_and_module.outputs.module_name }}" \
+                  "${{ inputs.citgm }}" 2>&1 | tee -a build_output.log
+            else
+              echo "OS ${{inputs.os}} save logs ${{ inputs.save_logs }}"
+              ./container_scripts/install_test_module.sh \
+                  "${{ steps.parse_node_and_module.outputs.module_name }}" \
+                  "${{ inputs.citgm }}"
+            fi
+          else
+            docker buildx create \
+              --use --name larger_log \
+              --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=50000000
+
+            if [[ ${{ inputs.save_logs }} == "true" ]]; then
+                echo "OS ${{inputs.os}} save logs ${{ inputs.save_logs }}"
+                docker buildx build . -f ./containerfiles/Dockerfile.${{ inputs.os }} \
+                    --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} \
+                    --build-arg ENABLE_CITGM=${{ inputs.citgm }} \
+                    --build-arg NODE_VERSION=${{ steps.parse_node_and_module.outputs.node_version }} \
+                    --progress=plain 2>&1 | tee -a build_output.log
+            else
+                echo "OS ${{inputs.os}} save logs ${{ inputs.save_logs }}"
+                docker buildx build . -f ./containerfiles/Dockerfile.${{ inputs.os }} \
+                    --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} \
+                    --build-arg ENABLE_CITGM=${{ inputs.citgm }} \
+                    --build-arg NODE_VERSION=${{ steps.parse_node_and_module.outputs.node_version }}
+            fi
+          fi
 
       - name: Format string
         id: format-string

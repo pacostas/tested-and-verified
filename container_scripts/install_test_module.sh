@@ -3,8 +3,6 @@
 NPM_MODULE=$1
 ENABLE_CITGM=$2
 
-PACKAGE_MANAGER=$(jq -r .[\"${NPM_MODULE}\"].package_manager ./supported_modules.json)
-
 if [ "$ENABLE_CITGM" = "true" ]; then
   npm i -g citgm
   citgm $NPM_MODULE
@@ -17,12 +15,26 @@ else
   git clone "https://github.com/${module_github_name}.git"
   cd "${module_github_name##*/}"
 
-  if [ "$PACKAGE_MANAGER" = "yarn" ]; then
+  if [ $NPM_MODULE = "@langchain/core" ]; then
+    # copied from https://github.com/langchain-ai/langchainjs/blob/main/.github/workflows/unit-tests-langchain-core.yml
+    export PUPPETEER_SKIP_DOWNLOAD="true"
+    export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="true"
     npm install --global yarn
-    yarn install
-    yarn test
+    yarn install --immutable
+    yarn build --filter=@langchain/core
+    yarn run test:unit:ci --filter=@langchain/core
   else
-    npm install
-    npm test
+    if [ $NPM_MODULE = "langchain" ]; then
+      # copied from https://github.com/langchain-ai/langchainjs/blob/main/.github/workflows/unit-tests-langchain.yml
+      export PUPPETEER_SKIP_DOWNLOAD="true"
+      export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD="true"
+      npm install --global yarn
+      yarn install --immutable
+      yarn build --filter=langchain
+      yarn run test:unit:ci --filter=langchain
+    else
+      npm install
+      npm test
+    fi
   fi
 fi
