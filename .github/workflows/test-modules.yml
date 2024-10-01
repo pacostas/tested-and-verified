@@ -41,6 +41,11 @@ on:
         options:
           - "true"
           - "false"
+      repeat_test:
+        description: "Defines how many times to rerun the tests of the package"
+        required: true
+        type: number
+        default: 1
 
 jobs:
   preparation:
@@ -56,7 +61,11 @@ jobs:
       - name: Get supported modules and node versions for ${{inputs.os}}
         id: get-supported-modules-and-node-versions
         run: |
-          ./.github/scripts/get_supported_modules_and_node_versions.sh  "${{inputs.npm_packages}}" "${{inputs.node_versions}}" ${{inputs.os}} >> $GITHUB_OUTPUT
+          ./.github/scripts/get_supported_modules_and_node_versions.sh \
+            "${{inputs.npm_packages}}" \
+            "${{inputs.node_versions}}" \
+            ${{inputs.os}} \
+            ${{inputs.repeat_test}} >> $GITHUB_OUTPUT
 
   test_modules:
     needs: preparation
@@ -70,7 +79,7 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v4
 
-      - name: Parse node version and module name
+      - name: Parse node version, module name and repeat num
         id: parse_node_and_module
         run: |
           node_version=$(echo '${{ matrix.module_node_version }}' | jq -r '.node_version')
@@ -78,6 +87,9 @@ jobs:
 
           module_name=$(echo '${{ matrix.module_node_version }}' | jq -r '.name')
           echo "module_name=$module_name" >> $GITHUB_OUTPUT
+
+          repeat_num=$(echo '${{ matrix.module_node_version }}' | jq -r '.repeat_num')
+          echo "repeat_num=$repeat_num" >> $GITHUB_OUTPUT
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -126,10 +138,19 @@ jobs:
         run: |
           echo "module_name=$(echo "${{ steps.parse_node_and_module.outputs.module_name }}" |  sed 's/@/_/g; s/\//_/g')" >> "$GITHUB_OUTPUT"
 
+      - name: Fail the job in case of module test failure
+        id: passed_or_failed
+        run: |
+          if grep -q "ERROR:" build_output.log; then
+            echo "result=failed" >> $GITHUB_OUTPUT
+          else
+            echo "result=passed" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: result-os-${{inputs.os}}-node-${{ steps.parse_node_and_module.outputs.node_version }}-package-${{ steps.format-string.outputs.module_name }}-citgm-${{ inputs.citgm }}
+          name: ${{ steps.passed_or_failed.outputs.result }}-repeat-${{ steps.parse_node_and_module.outputs.repeat_num }}-os-${{inputs.os}}-node-${{ steps.parse_node_and_module.outputs.node_version }}-package-${{ steps.format-string.outputs.module_name }}-citgm-${{ inputs.citgm }}
           path: build_output.log
           if-no-files-found: error
 
