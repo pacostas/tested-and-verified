@@ -1,0 +1,12 @@
+FROM ubuntu:22.04
+WORKDIR /app
+
+COPY ../container_scripts/* .
+COPY ../supported_modules.json .
+
+RUN curl -fsSL "https://deb.nodesource.com/setup_22.x" | bash - &&
+    apt-get -y update && apt-get install -y nodejs git jq curl npm
+
+ARG NPM_MODULE
+ARG ENABLE_CITGM
+RUN ./install_test_module.sh "$NPM_MODULE" "$ENABLE_CITGM"

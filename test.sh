@@ -109,16 +109,14 @@ run_tests() {
         for node_version in $node_versions; do
             for package in $packages; do
                 if [ "$save_logs" = "true" ]; then
-                    docker build . -f ./containerfiles/Dockerfile.$os \
+                    docker build . -f ./containerfiles/containerfile.$os.$node_version \
                         --build-arg NPM_MODULE=$package \
                         --build-arg ENABLE_CITGM=$citgm \
-                        --build-arg NODE_VERSION=$node_version \
                         --progress=plain 2>&1 | tee -a build_output.log
                 else
-                    docker build . -f ./containerfiles/Dockerfile.$os \
+                    docker build . -f ./containerfiles/containerfile.$os.$node_version \
                         --build-arg NPM_MODULE=$package \
-                        --build-arg ENABLE_CITGM=$citgm \
-                        --build-arg NODE_VERSION=$node_version
+                        --build-arg ENABLE_CITGM=$citgm
                 fi
             done
         done

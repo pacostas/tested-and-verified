@@ -1,0 +1,12 @@
+FROM quay.io/fedora/s2i-core:40
+WORKDIR /app
+
+RUN dnf -y install "nodejs20" && dnf -y install git nodejs nodejs-nodemon npm jq && dnf clean all
+alternatives --install /usr/bin/node node "/usr/bin/node-20" 1
+
+COPY ../container_scripts/* .
+COPY ../supported_modules.json .
+
+ARG NPM_MODULE
+ARG ENABLE_CITGM
+RUN ./install_test_module.sh "$NPM_MODULE" "$ENABLE_CITGM"

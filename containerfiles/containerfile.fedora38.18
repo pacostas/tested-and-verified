@@ -1,12 +1,13 @@
 FROM quay.io/fedora/s2i-core:38
 WORKDIR /app
 
+RUN dnf -y install "nodejs18" && dnf -y install git nodejs nodejs-nodemon npm jq && dnf clean all
+alternatives --install /usr/bin/node node "/usr/bin/node-18" 1
+
 COPY ../container_scripts/* .
 COPY ../supported_modules.json .
-
-ARG NODE_VERSION
-RUN ./install_dependencies.sh "$NODE_VERSION" "fedora"
 
 ARG NPM_MODULE
 ARG ENABLE_CITGM
 RUN ./install_test_module.sh "$NPM_MODULE" "$ENABLE_CITGM"
+
