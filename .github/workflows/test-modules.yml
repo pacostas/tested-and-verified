@@ -9,20 +9,11 @@ on:
         type: string
         default: ""
       os:
-        description: "Operating System"
+        description: "rhel8 rhel9 fedora38 fedora40 ubuntu20 ubuntu22 ubuntu24 ubuntu_latest_host (separate with space)"
         required: true
-        type: choice
-        options:
-          - "rhel8"
-          - "rhel9"
-          - "fedora38"
-          - "fedora40"
-          - "ubuntu20"
-          - "ubuntu22"
-          - "ubuntu24"
-          - "ubuntu_latest_host"
+        type: string
       node_versions:
-        description: "Node version(s) - separate with space"
+        description: "Node version(s) (separate with space)"
         required: true
         type: string
       citgm:
@@ -49,23 +40,23 @@ on:
 
 jobs:
   preparation:
-    name: Preparation for ${{inputs.os}}
+    name: Preparation
     runs-on: ubuntu-latest
     outputs:
-      module_node_version: ${{ steps.get-supported-modules-and-node-versions.outputs.module_node_version }}
+      module_os_node: ${{ steps.get-supported-modules-and-node-versions.outputs.module_os_node }}
       machine: ${{ steps.container-or-host.outputs.machine }}
     steps:
       - name: checkout code
         uses: actions/checkout@v4
 
-      - name: Get supported modules and node versions for ${{inputs.os}}
+      - name: Get supported modules and node versions for ${{ inputs.os }}
         id: get-supported-modules-and-node-versions
         run: |
           ./.github/scripts/get_supported_modules_and_node_versions.sh \
             "${{inputs.npm_packages}}" \
             "${{inputs.node_versions}}" \
-            ${{inputs.os}} \
-            ${{inputs.repeat_test}} >> $GITHUB_OUTPUT
+            "${{inputs.os}}" \
+            "${{inputs.repeat_test}}" >> $GITHUB_OUTPUT
 
   test_modules:
     needs: preparation
@@ -74,7 +65,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module_node_version: ${{ fromJson(needs.preparation.outputs.module_node_version) }}
+        module_os_node: ${{ fromJson(needs.preparation.outputs.module_os_node) }}
     steps:
       - name: checkout code
         uses: actions/checkout@v4
@@ -82,32 +73,35 @@ jobs:
       - name: Parse node version, module name and repeat num
         id: parse_node_and_module
         run: |
-          node_version=$(echo '${{ matrix.module_node_version }}' | jq -r '.node_version')
+          os=$(echo '${{ matrix.module_os_node }}' | jq -r '.os')
+          echo "os=$os" >> $GITHUB_OUTPUT
+
+          node_version=$(echo '${{ matrix.module_os_node }}' | jq -r '.node_version')
           echo "node_version=$node_version" >> $GITHUB_OUTPUT
 
-          module_name=$(echo '${{ matrix.module_node_version }}' | jq -r '.name')
+          module_name=$(echo '${{ matrix.module_os_node }}' | jq -r '.name')
           echo "module_name=$module_name" >> $GITHUB_OUTPUT
 
-          repeat_num=$(echo '${{ matrix.module_node_version }}' | jq -r '.repeat_num')
+          repeat_num=$(echo '${{ matrix.module_os_node }}' | jq -r '.repeat_num')
           echo "repeat_num=$repeat_num" >> $GITHUB_OUTPUT
 
       - name: Use Node.js
         uses: actions/setup-node@v4
-        if: ${{ inputs.os == 'ubuntu_latest_host' }}
+        if: ${{ steps.parse_node_and_module.outputs.os == 'ubuntu_latest_host' }}
         with:
           node-version: ${{ steps.parse_node_and_module.outputs.node_version }}
 
-      - name: OS ${{ inputs.os }} Node ${{ steps.parse_node_and_module.outputs.node_version }} Package ${{ steps.parse_node_and_module.outputs.module_name }} CITGM ${{ inputs.citgm }}
+      - name: OS ${{ steps.parse_node_and_module.outputs.os }} Node ${{ steps.parse_node_and_module.outputs.node_version }} Package ${{ steps.parse_node_and_module.outputs.module_name }} CITGM ${{ inputs.citgm }}
         run: |
 
-          if [[ ${{inputs.os}} == "ubuntu_latest_host" ]]; then
+          if [[ ${{steps.parse_node_and_module.outputs.os}} == "ubuntu_latest_host" ]]; then
             if [[ ${{ inputs.save_logs }} == "true" ]]; then
-              echo "OS ${{inputs.os}} save logs ${{ inputs.save_logs }}"
+              echo "OS ${{steps.parse_node_and_module.outputs.os}} save logs ${{ inputs.save_logs }}"
               ./container_scripts/install_test_module.sh \
                   "${{ steps.parse_node_and_module.outputs.module_name }}" \
                   "${{ inputs.citgm }}" 2>&1 | tee -a build_output.log
             else
-              echo "OS ${{inputs.os}} save logs ${{ inputs.save_logs }}"
+              echo "OS ${{steps.parse_node_and_module.outputs.os}} save logs ${{ inputs.save_logs }}"
               ./container_scripts/install_test_module.sh \
                   "${{ steps.parse_node_and_module.outputs.module_name }}" \
                   "${{ inputs.citgm }}"
@@ -118,14 +112,14 @@ jobs:
               --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=50000000
 
             if [[ ${{ inputs.save_logs }} == "true" ]]; then
-                echo "OS ${{inputs.os}} save logs ${{ inputs.save_logs }}"
-                docker build . -f ./containerfiles/containerfile.${{ inputs.os }}.${{ steps.parse_node_and_module.outputs.node_version }} \
+                echo "OS ${{steps.parse_node_and_module.outputs.os}} save logs ${{ inputs.save_logs }}"
+                docker build . -f ./containerfiles/containerfile.${{ steps.parse_node_and_module.outputs.os }}.${{ steps.parse_node_and_module.outputs.node_version }} \
                     --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} \
                     --build-arg ENABLE_CITGM=${{ inputs.citgm }} \
                     --progress=plain 2>&1 | tee -a build_output.log
             else
-                echo "OS ${{inputs.os}} save logs ${{ inputs.save_logs }}"
-                docker build . -f ./containerfiles/containerfile.${{ inputs.os }}.${{ steps.parse_node_and_module.outputs.node_version }} \
+                echo "OS ${{steps.parse_node_and_module.outputs.os}} save logs ${{ inputs.save_logs }}"
+                docker build . -f ./containerfiles/containerfile.${{ steps.parse_node_and_module.outputs.os }}.${{ steps.parse_node_and_module.outputs.node_version }} \
                     --build-arg NPM_MODULE=${{ steps.parse_node_and_module.outputs.module_name }} \
                     --build-arg ENABLE_CITGM=${{ inputs.citgm }}
             fi
@@ -148,7 +142,7 @@ jobs:
       - name: Upload results
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.passed_or_failed.outputs.result }}-repeat-${{ steps.parse_node_and_module.outputs.repeat_num }}-os-${{inputs.os}}-node-${{ steps.parse_node_and_module.outputs.node_version }}-package-${{ steps.format-string.outputs.module_name }}-citgm-${{ inputs.citgm }}
+          name: ${{ steps.passed_or_failed.outputs.result }}-repeat-${{ steps.parse_node_and_module.outputs.repeat_num }}-os-${{steps.parse_node_and_module.outputs.os}}-node-${{ steps.parse_node_and_module.outputs.node_version }}-package-${{ steps.format-string.outputs.module_name }}-citgm-${{ inputs.citgm }}
           path: build_output.log
           if-no-files-found: error
 
