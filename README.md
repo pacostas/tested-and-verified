@@ -38,7 +38,7 @@ You will get an output, for the specified range on the specified os. In case the
 - On specific platform, specific module, specific node versions
 
 ```bash
-./test.sh -oss rhel8 -nvs "20 18"
+./test.sh -oss ubuntu22 -pckgs pino -nvs "20"
 ```
 
 - On specific platform (rhel8) for all node modules with a specific node versions (20 and 18)
