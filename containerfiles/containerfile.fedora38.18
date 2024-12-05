@@ -1,8 +1,7 @@
 FROM quay.io/fedora/s2i-core:38
 WORKDIR /app
 
-RUN dnf -y install "nodejs18" && dnf -y install git nodejs nodejs-nodemon npm jq && dnf clean all
-alternatives --install /usr/bin/node node "/usr/bin/node-18" 1
+RUN dnf -y install "nodejs18" && dnf -y install git nodejs nodejs-nodemon npm jq
 
 COPY ../container_scripts/* .
 COPY ../supported_modules.json .

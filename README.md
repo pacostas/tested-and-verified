@@ -27,7 +27,13 @@ Download the whole logs folder from google drive.
 cd tested_and_verified
 rm -rf ./logs && mkdir ./logs
 unzip ~/Downloads/<log-zip-file>.zip  -d ./logs
-./parse_results.sh -os rhel9  --start-date 2024-03-13 --end-date 2024-05-01 2>/dev/null
+./parse_results.sh -os rhel9 2>/dev/null
+```
+
+In case you want to parse for specific dates
+
+```bash
+./parse_results.sh -os rhel9  --start-date 2024-08-22 --end-date 2024-11-18 2>/dev/null
 
 ```
 

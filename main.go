@@ -24,6 +24,7 @@ func main() {
 	data["nodejs-16"] = NodeVersion{version: "16", npm_packages_results: []string{}}
 	data["nodejs-18"] = NodeVersion{version: "18", npm_packages_results: []string{}}
 	data["nodejs-20"] = NodeVersion{version: "20", npm_packages_results: []string{}}
+	data["nodejs-22"] = NodeVersion{version: "22", npm_packages_results: []string{}}
 
 	for scanner.Scan() {
 
@@ -58,6 +59,12 @@ func main() {
 			fmt.Print("\t")
 		} else {
 			fmt.Print(data["nodejs-20"].npm_packages_results[i])
+			fmt.Print("\t")
+		}
+		if len(data["nodejs-22"].npm_packages_results) == 0 {
+			fmt.Print("\t")
+		} else {
+			fmt.Print(data["nodejs-22"].npm_packages_results[i])
 			fmt.Print("\t")
 		}
 	}
