@@ -1,11 +1,9 @@
-FROM ubuntu:22.04
+FROM quay.io/fedora/s2i-core:40
 WORKDIR /app
 
+RUN dnf -y install "nodejs18" && dnf -y install git nodejs nodejs-nodemon npm jq
 COPY ../container_scripts/* .
 COPY ../supported_modules.json .
-
-RUN curl -fsSL "https://deb.nodesource.com/setup_18.x" | bash - && \
-    apt-get -y update && apt-get install -y nodejs git jq curl npm
 
 ARG NPM_MODULE
 ARG ENABLE_CITGM

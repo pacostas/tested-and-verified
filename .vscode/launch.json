@@ -1,0 +1,22 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "bashdb",
+      "request": "launch",
+      "name": "bash tnv supported",
+      "program": "${workspaceFolder}/.github/scripts/get_supported_modules_and_node_versions.sh",
+      "args": ["pino fastify", "18 20", "rhel8 rhel9", 3]
+    },
+    {
+      "type": "bashdb",
+      "request": "launch",
+      "name": "Bash tnv parse",
+      "program": "${workspaceFolder}/parse_results.sh",
+      "args": []
+    }
+  ]
+}
