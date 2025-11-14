@@ -1,0 +1,113 @@
+name: Test with s2i
+
+on:
+  workflow_dispatch:
+
+jobs:
+  preparation:
+    name: Preparation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        combos:
+          [
+            { "os": "rhel8", "node": "20" },
+            { "os": "rhel8", "node": "22" },
+            { "os": "rhel9", "node": "20" },
+            { "os": "rhel9", "node": "22" },
+            { "os": "rhel9", "node": "24" },
+            { "os": "rhel10", "node": "22" },
+            { "os": "rhel10", "node": "24" },
+          ]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: build s2i builder images
+        run: |
+          git clone https://github.com/sclorg/s2i-nodejs-container.git
+          ./replace_registry.sh "./s2i-nodejs-container"
+
+          cd s2i-nodejs-container
+          git submodule update --init
+
+          sudo apt-get update
+          sudo apt-get install -y make
+          sudo apt-get install -y go-md2man
+
+          IMAGE_NAME=${{ matrix.combos.os }}_${{ matrix.combos.node }}_builder
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          make build TARGET=${{ matrix.combos.os }} VERSIONS=${{ matrix.combos.node }} BUILD_OPTIONS="-t $IMAGE_NAME"
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag $IMAGE_NAME $IMAGE_ID:latest
+          docker push $IMAGE_ID:latest
+
+  test_modules:
+    needs: preparation
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        combos:
+          [
+            { "os": "rhel8", "node": "20", "builder": "rhel8_20_builder" },
+            { "os": "rhel8", "node": "22", "builder": "rhel8_22_builder" },
+            { "os": "rhel9", "node": "20", "builder": "rhel9_20_builder" },
+            { "os": "rhel9", "node": "22", "builder": "rhel9_22_builder" },
+            { "os": "rhel9", "node": "24", "builder": "rhel9_24_builder" },
+            { "os": "rhel10", "node": "22", "builder": "rhel10_22_builder" },
+            { "os": "rhel10", "node": "24", "builder": "rhel10_24_builder" },
+          ]
+        node_modules:
+          [
+            { name: pino, repo: https://github.com/pinojs/pino.git },
+            { name: fastify, repo: https://github.com/fastify/fastify.git },
+            { name: express, repo: https://github.com/expressjs/express.git },
+            { name: prom-client, repo: https://github.com/siimon/prom-client.git },
+            { name: opossum, repo: https://github.com/nodeshift/opossum.git },
+            { name: kube-service-bindings, repo: https://github.com/nodeshift/kube-service-bindings.git },
+            # { name: cloudevents, repo: https://github.com/cloudevents/sdk-javascript.git },
+          ]
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v5
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build application image
+        id: build_app
+        run: |
+          ./s2i build ${{ matrix.node_modules.repo }} ghcr.io/pacostas/${{ matrix.combos.builder }} ${{ matrix.combos.os }}_${{ matrix.combos.node }}_${{ matrix.node_modules.name }} -e NODE_ENV="development" 2>&1 | tee -a build_output.log
+
+          BUILD_STATUS=${PIPESTATUS[0]}
+
+          if [ $BUILD_STATUS -ne 0 ]; then
+              echo "S2I Build failed with exit code $BUILD_STATUS."
+              exit $BUILD_STATUS
+          fi
+
+      - name: Run Unit Tests
+        id: unit_tests
+        run: |
+          docker run -e INIT_WRAPPER=false -e NODE_CMD="npm run test" -e NODE_ENV="production" ${{ matrix.combos.os }}_${{ matrix.combos.node }}_${{ matrix.node_modules.name }} 2>&1 | tee -a build_output.log
+
+          TEST_STATUS=${PIPESTATUS[0]}
+
+          if [ $TEST_STATUS -ne 0 ]; then
+              exit $TEST_STATUS
+          fi
+
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.combos.builder }}-${{ matrix.combos.os }}_${{ matrix.combos.node }}_${{ matrix.node_modules.name }}_build_logs
+          path: build_output.log
+          if-no-files-found: error
+
